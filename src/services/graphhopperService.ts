@@ -28,14 +28,17 @@ export class ATHISGraphHopperService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/route?` + new URLSearchParams({
-        point: `${start.lat},${start.lng}`,
-        point: `${end.lat},${end.lng}`,
-        vehicle: 'car',
-        instructions: 'true',
-        calc_points: 'true',
-        key: this.apiKey
-      }));
+      // Manually construct query string to handle multiple 'point' parameters
+      const queryParams = [
+        `point=${start.lat},${start.lng}`,
+        `point=${end.lat},${end.lng}`,
+        'vehicle=car',
+        'instructions=true',
+        'calc_points=true',
+        `key=${this.apiKey}`
+      ].join('&');
+
+      const response = await fetch(`${this.baseUrl}/route?${queryParams}`);
 
       if (!response.ok) {
         throw new Error(`GraphHopper API error: ${response.status}`);
