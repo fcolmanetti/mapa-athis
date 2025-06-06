@@ -1,6 +1,4 @@
 
-import { GraphHopper } from '@graphhopper/directions-api-js-client';
-
 export interface RoutePoint {
   lat: number;
   lng: number;
@@ -16,40 +14,35 @@ export interface ATHISArea {
 }
 
 export class ATHISGraphHopperService {
-  private graphhopper: GraphHopper | null = null;
   private apiKey: string;
+  private baseUrl: string = 'https://graphhopper.com/api/1';
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
-    this.initializeGraphHopper();
-  }
-
-  private initializeGraphHopper() {
-    try {
-      this.graphhopper = new GraphHopper({
-        key: this.apiKey,
-        host: 'https://graphhopper.com/api/1'
-      });
-      console.log('GraphHopper ATHIS service initialized');
-    } catch (error) {
-      console.error('Failed to initialize GraphHopper:', error);
-    }
+    console.log('GraphHopper ATHIS service initialized');
   }
 
   async calculateRoute(start: RoutePoint, end: RoutePoint) {
-    if (!this.graphhopper) {
-      throw new Error('GraphHopper not initialized');
+    if (!this.apiKey) {
+      throw new Error('GraphHopper API key not provided');
     }
 
     try {
-      const response = await this.graphhopper.route({
-        points: [[start.lng, start.lat], [end.lng, end.lat]],
+      const response = await fetch(`${this.baseUrl}/route?` + new URLSearchParams({
+        point: `${start.lat},${start.lng}`,
+        point: `${end.lat},${end.lng}`,
         vehicle: 'car',
-        instructions: true,
-        calc_points: true
-      });
+        instructions: 'true',
+        calc_points: 'true',
+        key: this.apiKey
+      }));
 
-      return response;
+      if (!response.ok) {
+        throw new Error(`GraphHopper API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Error calculating route:', error);
       throw error;
